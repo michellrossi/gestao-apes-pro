@@ -45,31 +45,30 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ transactions, onDayC
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto h-full flex flex-col">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 capitalize">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto h-full flex flex-col">
+      {/* Calendar Header */}
+      <div className="flex items-center justify-between mb-4 bg-white p-3 rounded-2xl shadow-sm border border-gray-100">
+        <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-50 rounded-lg text-gray-600">
+          <ChevronLeft size={20} />
+        </button>
+        <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
           {getMonthName(currentDate)}
         </h2>
-        <div className="flex space-x-2">
-          <button onClick={() => changeMonth(-1)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-            <ChevronLeft />
-          </button>
-          <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-100 rounded-lg text-gray-600">
-            <ChevronRight />
-          </button>
-        </div>
+        <button onClick={() => changeMonth(1)} className="p-2 hover:bg-gray-50 rounded-lg text-gray-600">
+          <ChevronRight size={20} />
+        </button>
       </div>
 
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="grid grid-cols-7 mb-4">
-          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-            <div key={day} className="text-center text-sm font-semibold text-gray-400 uppercase">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-2 md:p-6">
+        <div className="grid grid-cols-7 mb-2">
+          {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map(day => (
+            <div key={day} className="text-center text-xs font-bold text-gray-400 py-2">
               {day}
             </div>
           ))}
         </div>
         
-        <div className="grid grid-cols-7 gap-2 lg:gap-4 h-full auto-rows-fr">
+        <div className="grid grid-cols-7 gap-1 md:gap-4 auto-rows-fr">
           {daysInMonth.map((date, idx) => {
             if (!date) return <div key={`empty-${idx}`} className="bg-transparent" />;
             
@@ -82,19 +81,18 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ transactions, onDayC
                 key={dateStr}
                 onClick={() => dayTrans.length > 0 && onDayClick(dateStr, dayTrans)}
                 className={`
-                  relative p-2 rounded-xl border min-h-[60px] md:min-h-[80px] flex flex-col items-center md:items-start justify-start hover:shadow-md transition-shadow
-                  ${status === 'paid' ? 'bg-emerald-50 border-emerald-100' : ''}
-                  ${status === 'pending' ? 'bg-amber-50 border-amber-100' : ''}
-                  ${status === 'overdue' ? 'bg-red-50 border-red-100' : ''}
-                  ${!status ? 'bg-white border-gray-100' : ''}
+                  relative rounded-xl flex flex-col items-center justify-start pt-2
+                  h-14 md:h-24 md:items-start md:p-2 md:border md:hover:shadow-md transition-all
+                  ${!status ? 'bg-transparent md:bg-white md:border-gray-100' : ''}
+                  ${status && 'md:bg-gray-50 md:border-gray-200'}
                 `}
               >
-                <span className={`text-sm font-semibold ${!status ? 'text-gray-700' : 'text-gray-900'}`}>
+                <span className={`text-sm font-semibold mb-1 ${!status ? 'text-gray-700' : 'text-gray-900'}`}>
                   {date.getDate()}
                 </span>
                 
                 {status && (
-                  <div className="mt-2 flex gap-1 justify-center md:justify-start w-full flex-wrap">
+                  <div className="flex gap-1 justify-center flex-wrap w-full max-w-[80%]">
                     {dayTrans.map((t, i) => (
                       <div 
                         key={i} 
@@ -102,7 +100,6 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ transactions, onDayC
                           t.status === 'paid' ? 'bg-emerald-400' : 
                           (new Date(t.date) < new Date() && t.type === 'expense' && t.status === 'pending') ? 'bg-red-400' : 'bg-amber-400'
                         }`} 
-                        title={t.description}
                       />
                     ))}
                   </div>

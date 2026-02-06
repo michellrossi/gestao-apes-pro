@@ -95,6 +95,14 @@ const App: React.FC = () => {
     }
   };
 
+  const handlePropertyChange = (value: string) => {
+    if (value === 'new_property_action') {
+      handleAddProperty();
+    } else {
+      setCurrentPropertyId(value);
+    }
+  };
+
   const handleEditProperty = async () => {
     const currentProp = properties.find(p => p.id === currentPropertyId);
     if (!currentProp) return;
@@ -189,21 +197,13 @@ const App: React.FC = () => {
   return (
     <Layout activeView={activeView} onNavigate={setActiveView} isOffline={true}>
       
-      {/* Floating Action Button for Mobile & Desktop */}
-      <button
-        onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }}
-        className="fixed bottom-24 md:bottom-8 right-6 z-40 w-14 h-14 bg-brand-600 text-white rounded-full shadow-lg shadow-brand-200 flex items-center justify-center hover:bg-brand-700 transition-transform hover:scale-105 active:scale-95"
-      >
-        <Plus size={28} />
-      </button>
-
       {/* Main Views */}
       {activeView === 'dashboard' && (
         <Dashboard 
           transactions={transactions} 
           properties={properties}
           currentPropertyId={currentPropertyId}
-          onPropertyChange={setCurrentPropertyId}
+          onPropertyChange={handlePropertyChange}
           onAddProperty={handleAddProperty}
           onEditProperty={handleEditProperty}
           onExportPDF={handleExportPDF}
@@ -226,6 +226,13 @@ const App: React.FC = () => {
               <span>Filtrar</span>
             </button>
           </div>
+          <button
+            onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }}
+            className="w-full py-3 bg-brand-600 text-white rounded-xl font-bold shadow-lg shadow-brand-100 flex items-center justify-center gap-2 mb-4 md:hidden"
+          >
+            <Plus size={20} />
+            Nova Transação
+          </button>
           <TransactionList 
             transactions={getDisplayedTransactions()} 
             onEdit={(t) => { setEditingTransaction(t); setIsFormOpen(true); }}
