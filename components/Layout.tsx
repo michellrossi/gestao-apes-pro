@@ -68,7 +68,8 @@ const MobileNavItem = ({
 
 export const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate, isOffline }) => {
   return (
-    <div className="flex h-screen bg-white overflow-hidden font-sans">
+    // Use 100dvh for better mobile browser support (dynamic viewport height)
+    <div className="flex h-[100dvh] bg-white overflow-hidden font-sans">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-20 bg-white border-r border-gray-100 h-full items-center py-8 z-20">
         
@@ -133,7 +134,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, activeView, onNavigate
         {children}
       </main>
 
-      {/* Mobile Bottom Nav - Scrollable */}
+      {/* Mobile Bottom Nav - Scrollable & Fixed */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
         <div className="flex items-center overflow-x-auto hide-scrollbar px-2 py-1 gap-1">
           <MobileNavItem 

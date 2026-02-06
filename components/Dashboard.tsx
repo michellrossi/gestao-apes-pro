@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { Transaction, CATEGORY_LABELS, CATEGORY_COLORS, Property } from '../types';
 import { formatCurrency } from '../utils/formatters';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, CartesianGrid } from 'recharts';
-import { TrendingUp, Home, Hammer, Calendar, MoreHorizontal, Download, SlidersHorizontal, Plus } from 'lucide-react';
+import { TrendingUp, Home, Hammer, Calendar, MoreHorizontal, Download, SlidersHorizontal, Plus, LayoutDashboard } from 'lucide-react';
 
 interface DashboardProps {
   transactions: Transaction[];
@@ -93,52 +93,58 @@ export const Dashboard: React.FC<DashboardProps> = ({
   return (
     <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-6 bg-white min-h-screen">
       
-      {/* Header - Centered Title */}
-      <h1 className="text-2xl font-bold text-gray-900 text-center pt-2">Visão Geral</h1>
-      
-      {/* Controls Row */}
-      <div className="flex flex-col md:flex-row gap-4">
-        {/* Property Selector */}
-        <div className="relative group w-full md:w-auto md:flex-1">
-          <select 
-            value={currentPropertyId}
-            onChange={(e) => onPropertyChange(e.target.value)}
-            className="w-full appearance-none bg-white border border-gray-200 pl-10 pr-10 py-3 rounded-xl text-base font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer"
-          >
-            {properties.map(p => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-            <option value="new_property_action" className="font-bold text-brand-600">+ Adicionar Imóvel</option>
-          </select>
-          <Home size={18} className="text-gray-400 absolute left-3.5 top-3.5 pointer-events-none" />
-          <span className="text-gray-400 absolute right-3.5 top-3.5 pointer-events-none text-xs">▼</span>
-        </div>
+      {/* Header Row */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pt-2">
+        {/* Title - Takes remaining space on Desktop */}
+        <h1 className="text-2xl font-bold text-gray-900 text-center md:text-left md:flex-1 order-1 md:order-1">
+          Visão Geral
+        </h1>
 
-        {/* Action Icons - Just 3 Icons */}
-        <div className="flex items-center gap-3 justify-between md:justify-end">
-          <div className="flex gap-3 flex-1 md:flex-none">
-            <button 
-              onClick={onEditProperty}
-              title="Editar imóvel"
-              className="flex-1 md:flex-none flex justify-center items-center h-[50px] w-[50px] border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+        {/* Right Side Group: Property Select + Icons */}
+        <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center order-2 md:order-2">
+          
+          {/* Property Selector - Smaller width on desktop */}
+          <div className="relative group w-full md:w-[240px]">
+            <select 
+              value={currentPropertyId}
+              onChange={(e) => onPropertyChange(e.target.value)}
+              className="w-full appearance-none bg-white border border-gray-200 pl-10 pr-10 py-3 rounded-xl text-sm font-semibold text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-brand-500 cursor-pointer shadow-sm"
             >
-              <SlidersHorizontal size={22} />
-            </button>
+              {properties.map(p => (
+                <option key={p.id} value={p.id}>{p.name}</option>
+              ))}
+              <option value="new_property_action" className="font-bold text-brand-600">+ Adicionar Imóvel</option>
+            </select>
+            <Home size={18} className="text-gray-400 absolute left-3.5 top-3.5 pointer-events-none" />
+            <span className="text-gray-400 absolute right-3.5 top-3.5 pointer-events-none text-xs">▼</span>
+          </div>
+
+          {/* Action Icons */}
+          <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end">
+             <div className="flex gap-3 flex-1 md:flex-none">
+              <button 
+                onClick={onEditProperty}
+                title="Editar imóvel"
+                className="flex-1 md:flex-none flex justify-center items-center h-[46px] w-[46px] border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+              >
+                <SlidersHorizontal size={20} />
+              </button>
+              <button 
+                onClick={onExportPDF}
+                title="Exportar PDF"
+                className="flex-1 md:flex-none flex justify-center items-center h-[46px] w-[46px] border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+              >
+                <Download size={20} />
+              </button>
+            </div>
+            
             <button 
-              onClick={onExportPDF}
-              title="Exportar PDF"
-              className="flex-1 md:flex-none flex justify-center items-center h-[50px] w-[50px] border border-gray-200 rounded-xl hover:bg-gray-50 text-gray-600 transition-colors"
+              onClick={onAddTransaction}
+              className="h-[46px] px-5 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-100 transition-all active:scale-95 flex items-center justify-center"
             >
-              <Download size={22} />
+              <Plus size={24} />
             </button>
           </div>
-          
-          <button 
-            onClick={onAddTransaction}
-            className="h-[50px] px-6 bg-brand-600 hover:bg-brand-700 text-white rounded-xl shadow-lg shadow-brand-100 transition-all active:scale-95 flex items-center justify-center"
-          >
-            <Plus size={24} />
-          </button>
         </div>
       </div>
 
@@ -164,8 +170,8 @@ export const Dashboard: React.FC<DashboardProps> = ({
         </div>
       </button>
 
-      {/* Summary Cards Row */}
-      <div className="grid grid-cols-1 gap-4">
+      {/* Summary Cards Row - Side by Side on Desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {categoryList.map(cat => {
           const { paid } = getCategoryStats(cat);
           const color = CATEGORY_COLORS[cat as keyof typeof CATEGORY_COLORS];
@@ -175,7 +181,7 @@ export const Dashboard: React.FC<DashboardProps> = ({
               key={cat}
               onClick={() => onOpenPaidDetails(cat)}
               className="bg-white p-5 rounded-2xl transition-all text-left group relative overflow-hidden flex flex-col justify-between min-h-[110px]"
-              style={{ border: `1.5px solid ${color}30` }} // 30 is hex opacity approx 20%
+              style={{ border: `2px solid ${color}40` }} // Increased border thickness and opacity
             >
               <div className="flex items-center gap-2 mb-2 z-10">
                 <div 
@@ -184,13 +190,13 @@ export const Dashboard: React.FC<DashboardProps> = ({
                 >
                   {getCategoryIcon(cat)}
                 </div>
-                <span className="text-sm font-bold text-gray-500 uppercase tracking-wide">
+                <span className="text-xs font-bold text-gray-500 uppercase tracking-wide truncate">
                   {CATEGORY_LABELS[cat as keyof typeof CATEGORY_LABELS]}
                 </span>
               </div>
               
               <div className="z-10">
-                <p className="text-2xl font-bold text-gray-900 tracking-tight">
+                <p className="text-xl lg:text-2xl font-bold text-gray-900 tracking-tight truncate">
                   {formatCurrency(paid)}
                 </p>
               </div>
@@ -265,5 +271,3 @@ export const Dashboard: React.FC<DashboardProps> = ({
     </div>
   );
 };
-// Add missing import for LayoutDashboard icon used in Hero card
-import { LayoutDashboard } from 'lucide-react';
