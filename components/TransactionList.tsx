@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { Edit2, Trash2, User } from 'lucide-react';
+import { Trash2, User } from 'lucide-react';
 import { motion, PanInfo, useAnimation } from 'framer-motion';
 
 interface TransactionListProps {
@@ -25,7 +25,8 @@ const SwipeableTransactionItem = ({
   const controls = useAnimation();
   const [isDragging, setIsDragging] = useState(false);
 
-  const handleDragEnd = async (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+  // Removido o 'async' e trocado para evento genérico 'any' para evitar quebra de build por conflito de tipagem DOM no deploy
+  const handleDragEnd = (event: any, info: PanInfo) => {
     setIsDragging(false);
     if (info.offset.x < -100) {
       // Swiped left enough to trigger delete
@@ -77,7 +78,7 @@ const SwipeableTransactionItem = ({
         {/* Right Side: Amount, Payer, Status, Actions */}
         <div className="flex flex-col items-end justify-center space-y-1.5">
           <span className={`text-[15px] font-bold ${t.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>
-            R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+            {formatCurrency(t.amount)}
           </span>
           
           <div className="flex items-center gap-3">

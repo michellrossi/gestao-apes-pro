@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TransactionList } from './components/TransactionList';
@@ -7,7 +7,7 @@ import { PayersView } from './components/PayersView';
 import { CalendarView } from './components/CalendarView';
 import { StorageService } from './services/storage';
 import { Transaction, ViewName, Property, CATEGORY_LABELS } from './types';
-import { Plus, Filter, X, Calendar, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, X, Calendar, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
 import { generateInstallments, formatCurrency, formatDate } from './utils/formatters';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -75,6 +75,10 @@ const App: React.FC = () => {
       } else {
         await StorageService.deleteTransaction(t.id);
         setTransactions(prev => prev.filter(tx => tx.id !== t.id));
+      }
+      // Também atualiza os detalhes caso o modal esteja aberto
+      if (detailsModalOpen) {
+         setDetailsTransactions(prev => prev.filter(tx => tx.id !== t.id));
       }
     }
   };
