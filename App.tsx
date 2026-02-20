@@ -7,7 +7,7 @@ import { PayersView } from './components/PayersView';
 import { CalendarView } from './components/CalendarView';
 import { StorageService } from './services/storage';
 import { Transaction, ViewName, Property, CATEGORY_LABELS } from './types';
-import { Plus, Filter, X } from 'lucide-react';
+import { Plus, Filter, X, Calendar, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
 import { generateInstallments, formatCurrency, formatDate } from './utils/formatters';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -17,6 +17,10 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [properties, setProperties] = useState<Property[]>([]);
   const [currentPropertyId, setCurrentPropertyId] = useState<string>('');
+  
+  // Filter/Sort State
+  const [sortBy, setSortBy] = useState<'date' | 'amount'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -174,13 +178,22 @@ const App: React.FC = () => {
       filtered = filtered.filter(t => t.propertyId === currentPropertyId);
     }
 
-    if (activeView === 'transactions_revenue') return filtered.filter(t => t.type === 'revenue');
-    if (activeView === 'transactions_acquisition') return filtered.filter(t => t.category === 'acquisition');
-    if (activeView === 'transactions_renovation') return filtered.filter(t => t.category === 'renovation');
-    if (activeView === 'transactions_monthly') return filtered.filter(t => t.category === 'monthly');
-    if (activeView === 'transactions_other') return filtered.filter(t => t.category === 'other');
+    if (activeView === 'transactions_revenue') filtered = filtered.filter(t => t.type === 'revenue');
+    else if (activeView === 'transactions_acquisition') filtered = filtered.filter(t => t.category === 'acquisition');
+    else if (activeView === 'transactions_renovation') filtered = filtered.filter(t => t.category === 'renovation');
+    else if (activeView === 'transactions_monthly') filtered = filtered.filter(t => t.category === 'monthly');
+    else if (activeView === 'transactions_other') filtered = filtered.filter(t => t.category === 'other');
     
-    return filtered;
+    // Apply Sorting
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'date') {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      } else {
+        return sortOrder === 'asc' ? a.amount - b.amount : b.amount - a.amount;
+      }
+    });
   };
 
   const getViewTitle = () => {
@@ -221,10 +234,51 @@ const App: React.FC = () => {
                 {properties.find(p => p.id === currentPropertyId)?.name}
               </p>
             </div>
-            <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50">
-              <Filter size={16} />
-              <span>Filtrar</span>
-            </button>
+            <div className="flex bg-gray-100 p-1 rounded-xl">
+               <button
+                 onClick={() => {
+                   if (sortBy === 'date') {
+                     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                   } else {
+                     setSortBy('date');
+                     setSortOrder('desc');
+                   }
+                 }}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                   sortBy === 'date' 
+                     ? 'bg-white text-gray-900 shadow-sm' 
+                     : 'text-gray-500 hover:text-gray-700'
+                 }`}
+               >
+                 <Calendar size={14} />
+                 Data
+                 {sortBy === 'date' && (
+                   sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                 )}
+               </button>
+               
+               <button
+                 onClick={() => {
+                   if (sortBy === 'amount') {
+                     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+                   } else {
+                     setSortBy('amount');
+                     setSortOrder('desc');
+                   }
+                 }}
+                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                   sortBy === 'amount' 
+                     ? 'bg-white text-gray-900 shadow-sm' 
+                     : 'text-gray-500 hover:text-gray-700'
+                 }`}
+               >
+                 <DollarSign size={14} />
+                 Valor
+                 {sortBy === 'amount' && (
+                   sortOrder === 'asc' ? <ArrowUp size={12} /> : <ArrowDown size={12} />
+                 )}
+               </button>
+             </div>
           </div>
           <button
             onClick={() => { setEditingTransaction(null); setIsFormOpen(true); }}

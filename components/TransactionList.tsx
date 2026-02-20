@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Transaction } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
 import { Edit2, Trash2, User } from 'lucide-react';
+import { motion, PanInfo, useAnimation } from 'framer-motion';
 
 interface TransactionListProps {
   transactions: Transaction[];
@@ -9,6 +10,113 @@ interface TransactionListProps {
   onDelete: (t: Transaction) => void;
   onToggleStatus: (t: Transaction) => void;
 }
+
+const SwipeableTransactionItem = ({ 
+  t, 
+  onEdit, 
+  onDelete, 
+  onToggleStatus 
+}: { 
+  t: Transaction, 
+  onEdit: (t: Transaction) => void, 
+  onDelete: (t: Transaction) => void, 
+  onToggleStatus: (t: Transaction) => void 
+}) => {
+  const controls = useAnimation();
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnd = async (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    setIsDragging(false);
+    if (info.offset.x < -100) {
+      // Swiped left enough to trigger delete
+      onDelete(t);
+      // Reset position (in case delete is cancelled)
+      controls.start({ x: 0 });
+    } else {
+      // Snap back
+      controls.start({ x: 0 });
+    }
+  };
+
+  return (
+    <div className="relative overflow-hidden mb-2 rounded-xl">
+      {/* Background Layer (Delete Action) */}
+      <div className="absolute inset-0 bg-red-500 flex items-center justify-end pr-6 rounded-xl">
+        <Trash2 className="text-white" size={24} />
+      </div>
+
+      {/* Foreground Layer (Card) */}
+      <motion.div
+        drag="x"
+        dragConstraints={{ left: -100, right: 0 }}
+        dragElastic={0.1}
+        onDragStart={() => setIsDragging(true)}
+        onDragEnd={handleDragEnd}
+        animate={controls}
+        className="relative bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center z-10"
+        style={{ touchAction: 'pan-y' }} // Allow vertical scrolling
+        onClick={() => !isDragging && onEdit(t)}
+      >
+        {/* Left Side: Description and Date */}
+        <div className="flex flex-col justify-center space-y-1.5">
+          <div className="flex items-center gap-1.5">
+            <span className="font-bold text-gray-900 text-[15px]">
+              {t.description}
+            </span>
+            {t.installment && (
+              <span className="text-gray-500 font-medium text-[15px]">
+                ({t.installment.current}/{t.installment.total})
+              </span>
+            )}
+          </div>
+          <span className="text-gray-400 text-sm font-medium">
+            {formatDate(t.date)}
+          </span>
+        </div>
+
+        {/* Right Side: Amount, Payer, Status, Actions */}
+        <div className="flex flex-col items-end justify-center space-y-1.5">
+          <span className={`text-[15px] font-bold ${t.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>
+            R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+          </span>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 text-gray-400">
+              <User size={12} strokeWidth={2.5} />
+              <span className="text-xs font-medium text-gray-500">{t.payer}</span>
+            </div>
+            
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleStatus(t);
+              }}
+              className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors ${
+                t.status === 'paid' 
+                  ? 'bg-emerald-50 text-emerald-600' 
+                  : 'bg-amber-50 text-amber-600'
+              }`}
+            >
+              {t.status === 'paid' ? 'PAGO' : 'PENDENTE'}
+            </button>
+
+            {/* Desktop Delete Button (Visible on larger screens, hidden on mobile where swipe is used) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(t);
+              }}
+              className="hidden md:flex p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+              title="Excluir"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 export const TransactionList: React.FC<TransactionListProps> = ({ 
   transactions, 
@@ -25,60 +133,15 @@ export const TransactionList: React.FC<TransactionListProps> = ({
   }
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col space-y-2 pb-24 md:pb-0">
       {transactions.map((t) => (
-        <div 
-          key={t.id} 
-          className="flex justify-between py-5 px-1 border-b border-gray-100 last:border-0 hover:bg-gray-50 transition-colors cursor-pointer group"
-          onClick={() => onEdit(t)}
-        >
-          {/* Left Side: Description and Date */}
-          <div className="flex flex-col justify-center space-y-1.5">
-            <div className="flex items-center gap-1.5">
-              <span className="font-bold text-gray-900 text-[15px]">
-                {t.description}
-              </span>
-              {t.installment && (
-                <span className="text-gray-500 font-medium text-[15px]">
-                  ({t.installment.current}/{t.installment.total})
-                </span>
-              )}
-            </div>
-            <span className="text-gray-400 text-sm font-medium">
-              {formatDate(t.date)}
-            </span>
-          </div>
-
-          {/* Right Side: Amount, Payer, Status */}
-          <div className="flex flex-col items-end justify-center space-y-1.5">
-            <span className={`text-[15px] font-bold ${t.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>
-              R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-            </span>
-            
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5 text-gray-400">
-                <User size={12} strokeWidth={2.5} />
-                <span className="text-xs font-medium text-gray-500">{t.payer}</span>
-              </div>
-              
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onToggleStatus(t);
-                }}
-                className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wide transition-colors ${
-                  t.status === 'paid' 
-                    ? 'bg-emerald-50 text-emerald-600' 
-                    : 'bg-amber-50 text-amber-600'
-                }`}
-              >
-                {t.status === 'paid' ? 'PAGO' : 'PENDENTE'}
-              </button>
-            </div>
-          </div>
-          
-          {/* Hidden Actions (Visible on Hover/Swipe in future) - Kept simple for now as click opens edit */}
-        </div>
+        <SwipeableTransactionItem
+          key={t.id}
+          t={t}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onToggleStatus={onToggleStatus}
+        />
       ))}
     </div>
   );
