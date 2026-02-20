@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Layout } from './components/Layout';
 import { Dashboard } from './components/Dashboard';
 import { TransactionList } from './components/TransactionList';
@@ -7,7 +7,7 @@ import { PayersView } from './components/PayersView';
 import { CalendarView } from './components/CalendarView';
 import { StorageService } from './services/storage';
 import { Transaction, ViewName, Property, CATEGORY_LABELS } from './types';
-import { Plus, X, Calendar, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Filter, X, Calendar, DollarSign, ArrowUp, ArrowDown } from 'lucide-react';
 import { generateInstallments, formatCurrency, formatDate } from './utils/formatters';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -63,22 +63,18 @@ const App: React.FC = () => {
     setEditingTransaction(null);
   };
 
-  const handleDeleteTransaction = async (t: Transaction) => {
+  const handleDeleteTransaction = async (t: Transaction, skipConfirmation = false) => {
     const confirmMsg = t.installment 
       ? `Esta transação faz parte de um grupo de ${t.installment.total} parcelas. Deseja excluir TODAS as parcelas?`
       : "Tem certeza que deseja excluir esta transação?";
     
-    if (window.confirm(confirmMsg)) {
+    if (skipConfirmation || window.confirm(confirmMsg)) {
       if (t.installment) {
         await StorageService.deleteBatchByGroupId(t.installment.groupId);
         setTransactions(prev => prev.filter(tx => tx.installment?.groupId !== t.installment?.groupId));
       } else {
         await StorageService.deleteTransaction(t.id);
         setTransactions(prev => prev.filter(tx => tx.id !== t.id));
-      }
-      // Também atualiza os detalhes caso o modal esteja aberto
-      if (detailsModalOpen) {
-         setDetailsTransactions(prev => prev.filter(tx => tx.id !== t.id));
       }
     }
   };

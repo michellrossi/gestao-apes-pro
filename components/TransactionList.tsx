@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Transaction } from '../types';
 import { formatCurrency, formatDate } from '../utils/formatters';
-import { Trash2, User } from 'lucide-react';
+import { Edit2, Trash2, User } from 'lucide-react';
 import { motion, PanInfo, useAnimation } from 'framer-motion';
 
 interface TransactionListProps {
@@ -19,30 +19,40 @@ const SwipeableTransactionItem = ({
 }: { 
   t: Transaction, 
   onEdit: (t: Transaction) => void, 
-  onDelete: (t: Transaction) => void, 
+  onDelete: (t: Transaction, skipConfirmation?: boolean) => void, 
   onToggleStatus: (t: Transaction) => void 
 }) => {
   const controls = useAnimation();
   const [isDragging, setIsDragging] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
-  // Removido o 'async' e trocado para evento genérico 'any' para evitar quebra de build por conflito de tipagem DOM no deploy
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  const handleDragEnd = async (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     setIsDragging(false);
-    if (info.offset.x < -100) {
-      // Swiped left enough to trigger delete
-      onDelete(t);
-      // Reset position (in case delete is cancelled)
-      controls.start({ x: 0 });
+    // If swiped left enough (e.g. -50px), snap to open state (-80px)
+    if (info.offset.x < -50) {
+      setIsOpen(true);
+      controls.start({ x: -80 });
     } else {
-      // Snap back
+      setIsOpen(false);
       controls.start({ x: 0 });
     }
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Pass true to skip confirmation dialog
+    onDelete(t, true);
+    setIsOpen(false);
+    controls.start({ x: 0 });
   };
 
   return (
     <div className="relative overflow-hidden mb-2 rounded-xl">
       {/* Background Layer (Delete Action) */}
-      <div className="absolute inset-0 bg-red-500 flex items-center justify-end pr-6 rounded-xl">
+      <div 
+        className="absolute inset-0 bg-red-500 flex items-center justify-end pr-6 rounded-xl cursor-pointer"
+        onClick={handleDeleteClick}
+      >
         <Trash2 className="text-white" size={24} />
       </div>
 
@@ -56,7 +66,18 @@ const SwipeableTransactionItem = ({
         animate={controls}
         className="relative bg-white p-4 rounded-xl border border-gray-100 shadow-sm flex justify-between items-center z-10"
         style={{ touchAction: 'pan-y' }} // Allow vertical scrolling
-        onClick={() => !isDragging && onEdit(t)}
+        onClick={() => {
+          if (!isDragging) {
+            if (isOpen) {
+              // If open, close it
+              setIsOpen(false);
+              controls.start({ x: 0 });
+            } else {
+              // If closed, edit
+              onEdit(t);
+            }
+          }
+        }}
       >
         {/* Left Side: Description and Date */}
         <div className="flex flex-col justify-center space-y-1.5">
@@ -78,7 +99,7 @@ const SwipeableTransactionItem = ({
         {/* Right Side: Amount, Payer, Status, Actions */}
         <div className="flex flex-col items-end justify-center space-y-1.5">
           <span className={`text-[15px] font-bold ${t.type === 'expense' ? 'text-red-500' : 'text-emerald-500'}`}>
-            {formatCurrency(t.amount)}
+            R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </span>
           
           <div className="flex items-center gap-3">
@@ -105,7 +126,7 @@ const SwipeableTransactionItem = ({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                onDelete(t);
+                onDelete(t, false); // Desktop still uses confirmation
               }}
               className="hidden md:flex p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
               title="Excluir"
